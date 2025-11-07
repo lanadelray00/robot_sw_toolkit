@@ -7,7 +7,7 @@ from rclpy.node import Node
 from sensor_msgs.msg import JointState
 from moveit_msgs.srv import GetPositionFK
 from moveit_msgs.msg import RobotState
-from tf_transformations import euler_from_quaternion
+from transformations import euler_from_quaternion
 import threading
 import os
 
@@ -33,8 +33,8 @@ rvecs_list, tvecs_list = [], []
 ee_pose = []
 save_dir = "t_rvec_ee_list"
 count = 1
-os.makedirs(f"/home/choigh/WS/CR_SF_PJT/src/01_CR_PJT/cr_test/{save_dir}", exist_ok=True)
-data = np.load('/home/choigh/WS/Test_Tools_code/calib_data.npz')
+os.makedirs(f"/home/choigh/pratice_ws/CR_SF_PJT/src/01_CR_PJT/cr_test/{save_dir}", exist_ok=True)
+data = np.load('/home/choigh/practice_ws/Test_Tools_code/calib_data.npz')
 camera_matrix = data['mtx']
 dist_coeffs = data['dist']
 
