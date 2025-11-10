@@ -31,7 +31,7 @@ marker_length = 0.08
 # rvecs, tvecs save
 rvecs_list, tvecs_list = [], []
 ee_pose = []
-save_dir = "t_rvec_ee_list"
+save_dir = "hand_eye_calibration"
 count = 1
 os.makedirs(f"/home/choigh/pratice_ws/CR_SF_PJT/src/01_CR_PJT/cr_test/{save_dir}", exist_ok=True)
 data = np.load('/home/choigh/practice_ws/Test_Tools_code/calib_data.npz')
@@ -140,12 +140,12 @@ while True:
     cv2.imshow("Aruco Detection", frame)
 
     if key == 27:  # ESC to exit
-        np.savez(os.path.join(f"/home/choigh/WS/CR_SF_PJT/src/01_CR_PJT/cr_test/{save_dir}", "t_rvec_ee_list.npz"),
+        np.savez(os.path.join(f"/home/choigh/practice_ws/CR_SF_PJT/src/01_CR_PJT/cr_test/{save_dir}", "hand_eye_calibration.npz"),
              tvecs=np.array(tvecs_list),
              rvecs=np.array(rvecs_list),
              ee_pose=np.array(ee_pose))
 
-        print(f"\nSaved {len(tvecs_list)} marker + EE samples to {save_dir}/t_rvec_ee_list.npz")
+        print(f"\nSaved {len(tvecs_list)} marker + EE samples to {save_dir}/hand_eye_calibration.npz")
         break
 
 cap.release()
