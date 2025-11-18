@@ -7,14 +7,12 @@ from rclpy.node import Node
 from sensor_msgs.msg import JointState
 from moveit_msgs.srv import GetPositionFK
 from moveit_msgs.msg import RobotState
-from transformations import euler_from_quaternion
 import threading
 import os
 
 # ArUco Marker coord
 cap = cv2.VideoCapture('/dev/video2')
 aruco_dict = aruco.getPredefinedDictionary(aruco.DICT_4X4_50)
-parameters = aruco.DetectorParameters()
 parameters = aruco.DetectorParameters()
 parameters.adaptiveThreshConstant = 7      # 기본값: 7, 조명 강하면 ↑ 조정
 parameters.minMarkerPerimeterRate = 0.02   # 기본값: 0.03, 작게 조정 시 작은 마커도 감지
@@ -30,23 +28,23 @@ marker_length = 0.08
 
 # rvecs, tvecs save
 rvecs_list, tvecs_list = [], []
-ee_pose = []
+gripper_pose = []
 save_dir = "hand_eye_calibration"
 count = 1
-os.makedirs(f"/home/choigh/pratice_ws/CR_SF_PJT/src/01_CR_PJT/cr_test/{save_dir}", exist_ok=True)
+os.makedirs(f"/home/choigh/practice_ws/CR_SF_PJT/src/01_CR_PJT/cr_test/{save_dir}", exist_ok=True)
 data = np.load('/home/choigh/practice_ws/Test_Tools_code/calib_data.npz')
 camera_matrix = data['mtx']
 dist_coeffs = data['dist']
 
 
-# ee pose
+# Gripper_pose
 class FKClient(Node):
     def __init__(self):
         super().__init__('fk_client')
         self.fk_client = self.create_client(GetPositionFK, '/compute_fk')
         self.subscription = self.create_subscription(JointState, '/joint_states', self.joint_callback, 10)
         
-        # 최신 EE Pose 저장 변수
+        # 최신 Gripper Pose 저장 변수
         self.current_position = None
         self.current_orientation = None
         
@@ -72,18 +70,13 @@ class FKClient(Node):
             response = future.result()
             if len(response.pose_stamped) > 0:
                 pose = response.pose_stamped[0].pose
-
+                # translation vector
                 x, y, z = pose.position.x, pose.position.y, pose.position.z
-
+                # rotation vector (Quaternion)
                 qx, qy, qz, qw = pose.orientation.x, pose.orientation.y, pose.orientation.z, pose.orientation.w
-                quat = [qx, qy, qz, qw]
-                roll, pitch, yaw = euler_from_quaternion(quat)
-
-                # print(f"EE position → x: {x:.3f}, y: {y:.3f}, z: {z:.3f}")
-                # print(f"RPY → roll: {roll:.3f}, pitch: {pitch:.3f}, yaw: {yaw:.3f}")
-                # 최신 EE Pose 저장 변수
+                # save datas
                 self.current_position = [x, y, z]
-                self.current_orientation = [roll, pitch, yaw]
+                self.current_orientation = [qx, qy, qz, qw]
 
             else:
                 print("No FK result returned.")
@@ -99,7 +92,7 @@ ros_thread = threading.Thread(target=rclpy.spin, args=(fk_node,), daemon=True)
 ros_thread.start()
 
 
-# ArUco Marker
+# Target_pose (ArUco Marker)
 while True:
     ret, frame = cap.read()
     key = cv2.waitKey(1) & 0xFF
@@ -111,48 +104,51 @@ while True:
 
     if ids is not None:
         rvecs, tvecs, _ = aruco.estimatePoseSingleMarkers(corners, marker_length, camera_matrix, dist_coeffs)
+        aruco.drawDetectedMarkers(frame, corners, ids)
 
         for i in range(len(ids)):
-            aruco.drawDetectedMarkers(frame, corners, ids)
+
+            # translation vectors, rodrigues rotation vector
             cv2.drawFrameAxes(frame, camera_matrix, dist_coeffs, rvecs[i], tvecs[i], 0.02)
 
             # 화면 표시용 텍스트
             cX, cY = int(corners[i][0][0][0]), int(corners[i][0][0][1])
-            
-
             cv2.putText(frame, f"ID:{ids[i][0]} Z={tvecs[i][0][2]:.2f}m", (cX, cY - 10),
                         cv2.FONT_HERSHEY_SIMPLEX, 0.5, (0, 255, 0), 2)
             
             # 스페이스바 누르면 저장
             if key == 32:  # Spacebar
+                # save datas
                 tvecs_list.append([count, ids[i][0], tvecs[i][0][0], tvecs[i][0][1], tvecs[i][0][2]])
                 rvecs_list.append([count, rvecs[i][0][0], rvecs[i][0][1], rvecs[i][0][2]])
-                print(f"Num {count} | X={tvecs[i][0][0]:.3f}  Y={tvecs[i][0][1]:.3f}  Z={tvecs[i][0][2]:.3f}")
+                print(f"Num {count} translation, X={tvecs[i][0][0]:.3f}  Y={tvecs[i][0][1]:.3f}  Z={tvecs[i][0][2]:.3f}")
+                print(f"Num {count} rodrigues, rx={rvecs[i][0][0]:.3f}  ry={rvecs[i][0][1]:.3f}  rz={rvecs[i][0][2]:.3f}")
                 
                 if fk_node.current_position is not None:
                     x, y, z = fk_node.current_position
-                    roll, pitch, yaw = fk_node.current_orientation
-                    ee_pose.append([x, y, z, roll, pitch, yaw])
-                    print(f"EE position → x: {x:.3f}, y: {y:.3f}, z: {z:.3f}")
-                    print(f"RPY → roll: {roll:.3f}, pitch: {pitch:.3f}, yaw: {yaw:.3f}")
+                    qx, qy, qz, qw = fk_node.current_orientation
+                    # save datas
+                    gripper_pose.append([x, y, z, qx, qy, qz, qw])
+                    print(f"position → x: {x:.3f}, y: {y:.3f}, z: {z:.3f}")
+                    print(f"Quaternion → qx: {qx:.3f}, qy: {qy:.3f}, qz: {qz:.3f}, qw: {qw:.3f}")
                 count += 1
 
     cv2.imshow("Aruco Detection", frame)
 
     if key == 27:  # ESC to exit
-        np.savez(os.path.join(f"/home/choigh/practice_ws/CR_SF_PJT/src/01_CR_PJT/cr_test/{save_dir}", "hand_eye_calibration.npz"),
-             tvecs=np.array(tvecs_list),
-             rvecs=np.array(rvecs_list),
-             ee_pose=np.array(ee_pose))
+        np.savez(os.path.join(f"/home/choigh/practice_ws/CR_SF_PJT/src/01_CR_PJT/cr_test/{save_dir}", f"{save_dir}.npz"),
+             Target_tvecs=np.array(tvecs_list),
+             Target_rvecs=np.array(rvecs_list),
+             gripper_pose=np.array(gripper_pose))
 
-        print(f"\nSaved {len(tvecs_list)} marker + EE samples to {save_dir}/hand_eye_calibration.npz")
+        print(f"\nSaved {len(tvecs_list)} marker + Gripper_pose samples to {save_dir}/{save_dir}.npz")
         break
 
 cap.release()
 cv2.destroyAllWindows()
 
 # 🧹 ROS 노드 안전 종료
-print("\nShutting down ROS node...")
+print("\nShutting down...")
 fk_node.destroy_node()
 rclpy.shutdown()
 
