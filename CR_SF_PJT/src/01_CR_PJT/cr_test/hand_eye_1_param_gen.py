@@ -29,7 +29,7 @@ marker_length = 0.08
 # rvecs, tvecs save
 rvecs_list, tvecs_list = [], []
 gripper_pose = []
-save_dir = "hand_eye_calibration"
+save_dir = "hand_eye_calibration_1"
 count = 1
 os.makedirs(f"/home/choigh/practice_ws/CR_SF_PJT/src/01_CR_PJT/cr_test/{save_dir}", exist_ok=True)
 data = np.load('/home/choigh/practice_ws/Test_Tools_code/calib_data.npz')
@@ -121,16 +121,17 @@ while True:
                 # save datas
                 tvecs_list.append([count, ids[i][0], tvecs[i][0][0], tvecs[i][0][1], tvecs[i][0][2]])
                 rvecs_list.append([count, rvecs[i][0][0], rvecs[i][0][1], rvecs[i][0][2]])
-                print(f"Num {count} translation, X={tvecs[i][0][0]:.3f}  Y={tvecs[i][0][1]:.3f}  Z={tvecs[i][0][2]:.3f}")
-                print(f"Num {count} rodrigues, rx={rvecs[i][0][0]:.3f}  ry={rvecs[i][0][1]:.3f}  rz={rvecs[i][0][2]:.3f}")
+
+                print(f"Num {count} T translation, X={tvecs[i][0][0]:.3f}  Y={tvecs[i][0][1]:.3f}  Z={tvecs[i][0][2]:.3f}")
+                print(f"Num {count} T rodrigues, rx={rvecs[i][0][0]:.3f}  ry={rvecs[i][0][1]:.3f}  rz={rvecs[i][0][2]:.3f}")
                 
                 if fk_node.current_position is not None:
                     x, y, z = fk_node.current_position
                     qx, qy, qz, qw = fk_node.current_orientation
                     # save datas
                     gripper_pose.append([x, y, z, qx, qy, qz, qw])
-                    print(f"position → x: {x:.3f}, y: {y:.3f}, z: {z:.3f}")
-                    print(f"Quaternion → qx: {qx:.3f}, qy: {qy:.3f}, qz: {qz:.3f}, qw: {qw:.3f}")
+                    print(f"Num {count} G position x: {x:.3f}, y: {y:.3f}, z: {z:.3f}")
+                    print(f"Num {count} G Quaternion qx: {qx:.3f}, qy: {qy:.3f}, qz: {qz:.3f}, qw: {qw:.3f}")
                 count += 1
 
     cv2.imshow("Aruco Detection", frame)
