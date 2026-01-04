@@ -1,5 +1,0 @@
-train: /home/cgh/workspace/project1/Installation_point/yolo_data/images/train
-val: /home/cgh/workspace/project1/Installation_point/yolo_data/images/val
-
-nc: 1
-names: ['I_P']
