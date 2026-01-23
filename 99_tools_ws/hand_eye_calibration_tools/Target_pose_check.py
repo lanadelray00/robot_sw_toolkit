@@ -6,7 +6,7 @@ import cv2.aruco as aruco
 from collections import deque
 import os
 
-cv2.setLogLevel(0) 
+# cv2.setLogLevel(0) 
 cap = cv2.VideoCapture('/dev/video2')
 
 aruco_dict = aruco.getPredefinedDictionary(aruco.DICT_4X4_50)
