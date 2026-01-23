@@ -17,7 +17,7 @@ Core tool that records target poses in the camera frame and corresponding EE pos
 Core notebook for validating, filtering, and refining hand-eye calibration datasets generated from the parameter generator.
 
 ### Target_pose_check.py
-Simple tool for estimating target pose in the camera coordinate frame.<br><br>
+Simple tool for estimating target pose in the camera coordinate frame.<br><br><br><br>
 
 ## Test_Tools_code - File Descriptions
 ### calibration.ipynb
