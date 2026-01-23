@@ -18,9 +18,7 @@ Core notebook for validating, filtering, and refining hand-eye calibration datas
 
 ### Target_pose_check.py
 Simple tool for estimating target pose in the camera coordinate frame.
-
-
-
+<br><br>
 ## Test_Tools_code - File Descriptions
 ### calibration.ipynb
 Camera calibration notebook using 34 checkerboard images to compute camera matrix, distortion coefficients, and RMS reprojection error (~0.316).
