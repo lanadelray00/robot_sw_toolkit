@@ -5,9 +5,26 @@ import numpy as np
 import cv2.aruco as aruco
 from collections import deque
 import os
+import subprocess
+import time
 
+camera = "/dev/video2" 
+
+# ---------- camera param apply ----------
+subprocess.run([
+    "v4l2-ctl", "-d", camera,
+    "-c", "auto_exposure=1",
+    "-c", "exposure_time_absolute=100",           # exposure
+    "-c", "brightness=0",                         # brightness
+    "-c", "gain=1",
+    "-c", "backlight_compensation=0"
+], check=True)
+
+time.sleep(0.1)  # 드라이버 반영 시간 (중요)
+
+# ---------- open camera ----------
 # cv2.setLogLevel(0) 
-cap = cv2.VideoCapture('/dev/video2')
+cap = cv2.VideoCapture(camera, cv2.CAP_V4L2)
 
 aruco_dict = aruco.getPredefinedDictionary(aruco.DICT_4X4_50)
 parameters = aruco.DetectorParameters()
