@@ -1,3 +1,4 @@
+# This node is a test node for '/pick_and_place/start' topic to see if it can be received
 #!/usr/bin/env python3
 import rclpy
 from rclpy.node import Node
